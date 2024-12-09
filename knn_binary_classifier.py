@@ -10,15 +10,10 @@ y = np.array(data['y'][0])
 y[y==-1] = 0
 
 # split data into train and test sets (first 2000 entries train, last 1000 entries test)
-# x_train = x[:,0:2000]
-# y_train = y[0:2000]
-# x_test = x[:,2000:]
-# y_test = y[2000:]
-
-x_train = x[:,0:20]
-y_train = y[0:20]
-x_test = x[:,2990:]
-y_test = y[2990:]
+x_train = x[:,0:2000]
+y_train = y[0:2000]
+x_test = x[:,2000:]
+y_test = y[2000:]
 
 print(np.shape(x_train), np.shape(y_train))
 print(np.shape(x_test), np.shape(y_test))
@@ -87,9 +82,29 @@ optimal_k = knn.optimize_k(x_test, y_test, k_range)
 # classify with fitted model
 predicted_labels = knn.predict(x_test)
 
-print(predicted_labels)
-print(y_test)
-
 test_accuracy = np.mean(predicted_labels == y_test)
 
 print(f"Test Accuracy with k={optimal_k}: {test_accuracy:.4f}")
+
+# Compare predictions with true labels
+mislabeled_mask = predicted_labels != y_test
+
+# Get indices of mislabeled points
+mislabeled_indices = np.where(mislabeled_mask)[0]
+
+# Extract mislabeled data points and their true/predicted labels
+mislabeled_data = x_test[:, mislabeled_indices]
+true_labels = y_test[mislabeled_indices]
+predicted_labels_mislabeled = predicted_labels[mislabeled_indices]
+
+# Print information about mislabeled points
+print(f"Number of mislabeled points: {len(mislabeled_indices)}")
+for i, idx in enumerate(mislabeled_indices):
+    print(f"Index: {idx}, True Label: {true_labels[i]}, Predicted Label: {predicted_labels_mislabeled[i]}")
+
+for i, idx in enumerate(mislabeled_indices[:5]):  # Visualize up to 5 mislabeled samples
+    plt.figure(figsize=(3, 3))
+    plt.imshow(mislabeled_data[:, i].reshape(28, 28), cmap='gray')  # Reshape based on image size
+    plt.title(f"True: {true_labels[i]}, Predicted: {predicted_labels_mislabeled[i]}")
+    plt.axis('off')
+    plt.show()
