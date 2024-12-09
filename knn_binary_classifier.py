@@ -1,23 +1,22 @@
+import os
 import scipy.io
 import numpy as np
 from matplotlib import pyplot as plt
-import os
+
 
 # load data set
 data = scipy.io.loadmat('mnist_49_3000.mat') # change to relative path to data file
+# isolate data and labels into separate variables
 x = np.array(data['x'])
 y = np.array(data['y'][0])
 # remap "4" samples label to 0
 y[y==-1] = 0
 
-# split data into train and test sets (first 2000 entries train, last 1000 entries test)
+# split data and labels into train and test sets (first 2000 entries train, last 1000 entries test)
 x_train = x[:,0:2000]
 y_train = y[0:2000]
 x_test = x[:,2000:]
 y_test = y[2000:]
-
-print(np.shape(x_train), np.shape(y_train))
-print(np.shape(x_test), np.shape(y_test))
 
 # define Euclidean distance function for use in classifier
 def euclidean_distances(test_x, train):
@@ -34,17 +33,19 @@ class KNearestNeighbors:
 
   # define function to establish training data set
   def fit(self, train_x, train_y):
+    # set x_train and y_train to passed values
     self.x_train = train_x
     self.y_train = train_y
-    print(np.shape(x_train))
-    print(np.shape(y_train))
 
-  # predict label of a given test data point based on K-nearest neighbors
+  # predict label of a given test data point based on k-nearest neighbors
   def _predict_one(self, test_x):
+    # calculate distances of training data points from test point
     distances = euclidean_distances(test_x, self.x_train)
+    # select indices of k nearest training data points
     k_indices = np.argsort(distances)[:self.k]
+    # select k nearest labels
     k_nearest_labels = [self.y_train[i] for i in k_indices]
-    return np.bincount(k_nearest_labels).argmax()
+    return np.bincount(k_nearest_labels).argmax() # return most frequent label from k-nearest neighbors to test data point in training data set
 
   # predict labels of a given set of data points
   def predict(self, test_x):
@@ -53,23 +54,30 @@ class KNearestNeighbors:
   
   # optimize k using validation set
   def optimize_k(self, x_val, y_val, k_values):
+      # initialize variables to hold best k value and accuracy
       best_k = None
       best_accuracy = 0
 
+      # loop through k values
       for k in k_values:
           self.k = k
+          # make predictions on x_val for a given k
           predictions = self.predict(x_val)
+          # calculate model accuracy for a given k
           accuracy = np.mean(predictions == y_val)
           # display accuracy to 4 decimal places
           print(f"k = {k}, Validation Accuracy = {accuracy:.4f}")
           
+          # if model accuracy with current k is greater than previous best,
+          # set best k to current k and best accuracy to current accuracy
           if accuracy > best_accuracy:
               best_k = k
               best_accuracy = accuracy
 
+      # display optimal k and model accuracy
       print(f"Optimal k: {best_k}, Accuracy: {best_accuracy:.4f}")
       self.k = best_k  # Set the model to use the optimal k
-      return best_k
+      return best_k # return best k
   
 # initialize KNN with k=3. K will be tuned below
 knn = KNearestNeighbors(k=3)
@@ -78,7 +86,7 @@ knn = KNearestNeighbors(k=3)
 knn.fit(x_train, y_train)
 
 # tune k
-k_range = range(1, 11)  # test k-values from 1 to 20
+k_range = range(1, 11)  # test k-values from 1 to 10
 optimal_k = knn.optimize_k(x_test, y_test, k_range)
 
 # classify with fitted model
@@ -116,18 +124,19 @@ for i, idx in enumerate(mislabeled_indices[:5]):  # Visualize up to 5 mislabeled
 output_dir = "mislabeled_images"
 os.makedirs(output_dir, exist_ok=True)
 
-# Save up to 5 mislabeled images
+# save up to 5 mislabeled images
 for i, idx in enumerate(mislabeled_indices[:5]):
-    # Reshape the sample
+    # reshape the sample
     image = mislabeled_data[:, i].reshape(28, 28)
+    # display the mislabeled image with true and predicted labels
     plt.figure(figsize=(3, 3))
     plt.imshow(image, cmap='gray')
     plt.title(f"True: {true_labels[i]}, Predicted: {predicted_labels_mislabeled[i]}")
     plt.axis('off')
     
-    # Save the image
+    # save the mislabeled image
     image_path = os.path.join(output_dir, f"mislabeled_{idx}_true_{true_labels[i]}_pred_{predicted_labels_mislabeled[i]}.png")
     plt.savefig(image_path, bbox_inches='tight')
-    plt.close()  # Close the figure to avoid display and memory usage
+    plt.close()  # close the figure to avoid display and memory usage
 
     print(f"Saved image: {image_path}")
