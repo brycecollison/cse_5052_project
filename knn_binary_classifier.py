@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 import os
 
 # load data set
-data = scipy.io.loadmat('mnist_49_3000.mat')
+data = scipy.io.loadmat('mnist_49_3000.mat') # change to relative path to data file
 x = np.array(data['x'])
 y = np.array(data['y'][0])
 # remap "4" samples label to 0
