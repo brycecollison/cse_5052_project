@@ -3,7 +3,6 @@ import scipy.io
 import numpy as np
 from matplotlib import pyplot as plt
 
-
 # load data set
 data = scipy.io.loadmat('mnist_49_3000.mat') # change to relative path to data file
 # isolate data and labels into separate variables
@@ -113,13 +112,6 @@ print(f"Number of mislabeled points: {len(mislabeled_indices)}")
 for i, idx in enumerate(mislabeled_indices):
     print(f"Index: {idx}, True Label: {true_labels[i]}, Predicted Label: {predicted_labels_mislabeled[i]}")
 
-for i, idx in enumerate(mislabeled_indices[:5]):  # Visualize up to 5 mislabeled samples
-    plt.figure(figsize=(3, 3))
-    plt.imshow(mislabeled_data[:, i].reshape(28, 28), cmap='gray')
-    plt.title(f"True: {true_labels[i]}, Predicted: {predicted_labels_mislabeled[i]}")
-    plt.axis('off')
-    plt.show()
-
 # create directory for misclassified image examples
 output_dir = "mislabeled_images"
 os.makedirs(output_dir, exist_ok=True)
@@ -140,3 +132,37 @@ for i, idx in enumerate(mislabeled_indices[:5]):
     plt.close()  # close the figure to avoid display and memory usage
 
     print(f"Saved image: {image_path}")
+
+# extract correctly labeled images into separate vars for each class
+correct_4_indices = np.where(np.logical_and(predicted_labels == y_test, predicted_labels == 0))[0]
+correct_4 = x_test[:, correct_4_indices]
+correct_9_indices = np.where(np.logical_and(predicted_labels == y_test, predicted_labels == 1))[0]
+correct_9 = x_test[:, correct_9_indices]
+
+# create array of example images of correctly labeled 4s and 9s and incorrectly labeled images
+example_images = np.concatenate((correct_4[:,:5], correct_9[:,:5], mislabeled_data[:,:5]), axis=1)
+example_indices = np.concatenate((correct_4_indices[:5], correct_9_indices[:5], mislabeled_indices[:5]))
+
+
+# create figure with 5 correctly labeled images of each class and 5 incorrectly labeled images
+fig = plt.figure(figsize=(10,10), layout="constrained")
+fig.suptitle("Classified Images", fontsize = 24)
+
+row_titles = ["Correct 4s", "Correct 9s", "Misclassified"]
+
+subfigs = fig.subfigures(nrows=3, ncols=1)
+
+for row, subfig in enumerate(subfigs):
+  subfig.suptitle(row_titles[row], fontsize = 16)
+
+  axs = subfig.subplots(nrows=1, ncols=5)
+  for col, ax in enumerate(axs):
+    subfig_index = (row * 5) + col
+    ax.imshow(example_images[:, subfig_index].reshape(28,28))
+    ax.axis("off")
+    ax.set_title(f"Predicted: {predicted_labels[example_indices[subfig_index]]} True: {y_test[example_indices[subfig_index]]}", fontsize = 12)
+
+# save example image figure
+plt.savefig("classified_examples.png", bbox_inches="tight")
+
+plt.close()
