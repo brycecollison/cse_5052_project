@@ -146,7 +146,7 @@ example_indices = np.concatenate((correct_4_indices[:5], correct_9_indices[:5], 
 
 # create figure with 5 correctly labeled images of each class and 5 incorrectly labeled images
 fig = plt.figure(figsize=(10,10), layout="constrained")
-fig.suptitle("Classified Images", fontsize = 24)
+fig.suptitle(f"Classified Images (k = {optimal_k}; accuracy = {test_accuracy})", fontsize = 24)
 
 row_titles = ["Correct 4s", "Correct 9s", "Misclassified"]
 
